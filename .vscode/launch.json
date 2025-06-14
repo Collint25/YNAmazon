@@ -6,11 +6,18 @@
     "configurations": [
 
         {
-            "name": "Python Debugger: Current File",
+            "name": "Debug yna print-ynab",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        }
+            "module": "ynamazon.cli.cli",
+            "args": ["print-ynab"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src",
+                // "LOGURU_LEVEL": "DEBUG"  // Enable detailed logging
+            },
+            "justMyCode": true
+        },
     ]
 }

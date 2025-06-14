@@ -62,10 +62,24 @@ def get_payees_by_budget(
     """
     configuration = configuration or default_configuration
     budget_id = budget_id or my_budget_id.get_secret_value()
+    
+    logger.debug(f"Getting payees for budget_id: {budget_id}")
+    logger.debug(f"Using configuration: {configuration}")
+    
     with ApiClient(configuration=configuration) as api_client:
         response = PayeesApi(api_client).get_payees(budget_id=budget_id)
-
-    return response.data.payees
+    
+    payees = response.data.payees
+    logger.debug(f"Retrieved {len(payees)} payees")
+    
+    # Log first few payees for debugging
+    for i, payee in enumerate(payees[:3]):
+        logger.debug(f"Payee {i + 1}:")
+        logger.debug(f"  ID: {payee.id}")
+        logger.debug(f"  Name: {payee.name}")
+        logger.debug(f"  Transfer Account ID: {payee.transfer_account_id}")
+    
+    return payees
 
 
 def get_transactions_by_payee(
@@ -112,8 +126,12 @@ def get_ynab_transactions(
     """
     configuration = configuration or default_configuration
     budget_id = budget_id or my_budget_id.get_secret_value()
+    
+    logger.debug(f"Using budget_id: {budget_id}")
+    logger.debug(f"Configuration: {configuration}")
 
     payees = get_payees_by_budget(configuration, budget_id)
+    logger.debug(f"Found {len(payees)} total payees")
 
     rprint("Finding payees...")
     amazon_needs_memo_payee = find_item_by_attribute(
@@ -126,6 +144,12 @@ def get_ynab_transactions(
         attribute="name",
         value=settings.ynab_payee_name_processing_completed,
     )
+    
+    logger.debug(f"Looking for payee: {settings.ynab_payee_name_to_be_processed}")
+    logger.debug(f"Found amazon_needs_memo_payee: {amazon_needs_memo_payee}")
+    logger.debug(f"Looking for payee: {settings.ynab_payee_name_processing_completed}")
+    logger.debug(f"Found amazon_with_memo_payee: {amazon_with_memo_payee}")
+    
     if amazon_needs_memo_payee is None:
         raise YnabSetupError(
             f"Payee '{settings.ynab_payee_name_to_be_processed}' not found in YNAB."
@@ -138,6 +162,16 @@ def get_ynab_transactions(
     ynab_transactions = get_transactions_by_payee(
         budget_id=budget_id, payee=amazon_needs_memo_payee
     )
+    logger.debug(f"Found {len(ynab_transactions)} transactions for payee {amazon_needs_memo_payee.name}")
+    
+    # Log first transaction details if any exist
+    if ynab_transactions:
+        first_transaction = ynab_transactions[0]
+        logger.debug(f"Sample transaction details:")
+        logger.debug(f"  Date: {first_transaction.var_date}")
+        logger.debug(f"  Amount: {first_transaction.amount_decimal}")
+        logger.debug(f"  Payee: {first_transaction.payee_name}")
+        logger.debug(f"  Memo: {first_transaction.memo}")
 
     return ynab_transactions, amazon_with_memo_payee
 
