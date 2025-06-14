@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     ynab_budget_id: SecretBudgetId
     amazon_user: EmailStr
     amazon_password: SecretStr
+    amazon_otp_secret_key: SecretStr | None = None
     openai_api_key: SecretApiKey | None = None
 
     ynab_payee_name_to_be_processed: str = "Amazon - Needs Memo"

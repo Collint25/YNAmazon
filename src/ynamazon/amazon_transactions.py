@@ -59,16 +59,19 @@ class AmazonConfig(BaseModel):
     Attributes:
         username (EmailStr): Amazon account email.
         password (SecretStr): Amazon account password.
+        otp_secret_key (SecretStr | None): Optional OTP secret key for 2FA authentication.
     """
 
     username: EmailStr = Field(default_factory=lambda: settings.amazon_user)
     password: SecretStr = Field(default_factory=lambda: settings.amazon_password)
+    otp_secret_key: SecretStr | None = Field(default_factory=lambda: settings.amazon_otp_secret_key)
 
     def amazon_session(self) -> AmazonSession:
         """Creates an Amazon session."""
         return AmazonSession(
             username=self.username,
             password=self.password.get_secret_value(),
+            otp_secret_key=self.otp_secret_key.get_secret_value() if self.otp_secret_key else None,
         )
 
 
